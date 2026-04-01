@@ -1,0 +1,5 @@
+{
+  "name": "Smart Note Reminder",
+  "description": "A native Android app for creating notes with scheduled reminders using AlarmManager and Room database.",
+  "requestFramePermissions": []
+}
