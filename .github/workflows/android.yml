@@ -23,13 +23,16 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
       with:
+        gradle-version: 8.5
         cache-disabled: true
 
-    - name: List files (Debug)
-      run: ls -R
+    - name: Accept Android Licenses
+      run: yes | sdkmanager --licenses || true
 
     - name: Build with Gradle
-      run: gradle assembleDebug -p android
+      run: |
+        cd android
+        gradle assembleDebug --stacktrace --info
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
