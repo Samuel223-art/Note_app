@@ -22,4 +22,40 @@
     <style name="Theme.SmartNoteReminder.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="Theme.SmartNoteReminder.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <!-- Midnight Theme -->
+    <style name="Theme.SmartNoteReminder.Midnight" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/midnight_bg</item>
+        <item name="colorPrimaryVariant">@color/midnight_bg</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/midnight_accent</item>
+        <item name="android:windowBackground">@color/midnight_bg</item>
+    </style>
+
+    <!-- Forest Theme -->
+    <style name="Theme.SmartNoteReminder.Forest" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/forest_bg</item>
+        <item name="colorPrimaryVariant">@color/forest_bg</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/forest_accent</item>
+        <item name="android:windowBackground">@color/forest_bg</item>
+    </style>
+
+    <!-- Sunset Theme -->
+    <style name="Theme.SmartNoteReminder.Sunset" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/sunset_bg</item>
+        <item name="colorPrimaryVariant">@color/sunset_bg</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/sunset_accent</item>
+        <item name="android:windowBackground">@color/sunset_bg</item>
+    </style>
+
+    <!-- Ocean Theme -->
+    <style name="Theme.SmartNoteReminder.Ocean" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/ocean_bg</item>
+        <item name="colorPrimaryVariant">@color/ocean_bg</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/ocean_accent</item>
+        <item name="android:windowBackground">@color/ocean_bg</item>
+    </style>
 </resources>

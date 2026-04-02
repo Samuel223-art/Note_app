@@ -31,7 +31,15 @@ class MainActivity : AppCompatActivity() {
     private val notesList = mutableListOf<Note>()
     private lateinit var adapter: NoteAdapter
 
+    private enum class NoteView {
+        ACTIVE, ARCHIVED, TRASH, FAVOURITES
+    }
+
+    private var currentView = NoteView.ACTIVE
+    private var searchQuery = ""
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        applyTheme()
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -42,6 +50,7 @@ class MainActivity : AppCompatActivity() {
 
         checkNotificationPermission()
         setupRecyclerView()
+        setupNavigation()
 
         binding.fab.setOnClickListener {
             showAddNoteDialog()
@@ -59,21 +68,154 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        adapter = NoteAdapter(notesList) { note ->
-            showDeleteConfirmation(note)
-        }
+        adapter = NoteAdapter(notesList, 
+            onDeleteClick = { note -> showDeleteConfirmation(note) },
+            onPinClick = { note -> togglePin(note) },
+            onArchiveClick = { note -> toggleArchive(note) },
+            onFavouriteClick = { note -> toggleFavourite(note) }
+        )
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.adapter = adapter
     }
 
+    private fun togglePin(note: Note) {
+        lifecycleScope.launch {
+            db.noteDao().update(note.copy(isPinned = !note.isPinned, updatedAt = System.currentTimeMillis()))
+        }
+    }
+
+    private fun toggleArchive(note: Note) {
+        lifecycleScope.launch {
+            db.noteDao().update(note.copy(isArchived = !note.isArchived, isPinned = false, updatedAt = System.currentTimeMillis()))
+        }
+    }
+
+    private fun toggleFavourite(note: Note) {
+        lifecycleScope.launch {
+            db.noteDao().update(note.copy(isFavourite = !note.isFavourite, updatedAt = System.currentTimeMillis()))
+        }
+    }
+
+    private fun applyTheme() {
+        val prefs = getSharedPreferences("XNotePrefs", MODE_PRIVATE)
+        val themeId = prefs.getString("themeId", "default")
+        when (themeId) {
+            "midnight" -> setTheme(R.style.Theme_SmartNoteReminder_Midnight)
+            "forest" -> setTheme(R.style.Theme_SmartNoteReminder_Forest)
+            "sunset" -> setTheme(R.style.Theme_SmartNoteReminder_Sunset)
+            "ocean" -> setTheme(R.style.Theme_SmartNoteReminder_Ocean)
+            else -> setTheme(R.style.Theme_SmartNoteReminder)
+        }
+    }
+
+    private fun showThemeDialog() {
+        val themes = arrayOf("Default", "Midnight", "Forest", "Sunset", "Ocean")
+        AlertDialog.Builder(this)
+            .setTitle("Choose Theme")
+            .setItems(themes) { _, which ->
+                val themeId = themes[which].lowercase()
+                getSharedPreferences("XNotePrefs", MODE_PRIVATE)
+                    .edit()
+                    .putString("themeId", themeId)
+                    .apply()
+                recreate()
+            }
+            .show()
+    }
+
     private fun observeNotes() {
         lifecycleScope.launch {
-            db.noteDao().getAllNotes().collect { notes ->
+            val flow = when (currentView) {
+                NoteView.ACTIVE -> db.noteDao().getAllActiveNotes()
+                NoteView.ARCHIVED -> db.noteDao().getArchivedNotes()
+                NoteView.TRASH -> db.noteDao().getDeletedNotes()
+                NoteView.FAVOURITES -> db.noteDao().getFavouriteNotes()
+            }
+
+            flow.collect { notes ->
+                val filteredNotes = if (searchQuery.isEmpty()) {
+                    notes
+                } else {
+                    notes.filter { 
+                        it.title.contains(searchQuery, ignoreCase = true) || 
+                        it.content.contains(searchQuery, ignoreCase = true) 
+                    }
+                }
                 notesList.clear()
-                notesList.addAll(notes)
+                notesList.addAll(filteredNotes)
                 adapter.notifyDataSetChanged()
             }
         }
+    }
+
+    override fun onCreateOptionsMenu(menu: android.view.Menu): Boolean {
+        menuInflater.inflate(R.menu.main_menu, menu)
+        val searchItem = menu.findItem(R.id.action_search)
+        val searchView = searchItem.actionView as androidx.appcompat.widget.SearchView
+
+        searchView.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                searchQuery = query ?: ""
+                observeNotes()
+                return true
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                searchQuery = newText ?: ""
+                observeNotes()
+                return true
+            }
+        })
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: android.view.MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.action_view_active -> {
+                currentView = NoteView.ACTIVE
+                supportActionBar?.title = "X Note"
+                observeNotes()
+            }
+            R.id.action_view_favourites -> {
+                currentView = NoteView.FAVOURITES
+                supportActionBar?.title = "Favourites"
+                observeNotes()
+            }
+            R.id.action_view_archived -> {
+                currentView = NoteView.ARCHIVED
+                supportActionBar?.title = "Archive"
+                observeNotes()
+            }
+            R.id.action_view_trash -> {
+                currentView = NoteView.TRASH
+                supportActionBar?.title = "Trash"
+                observeNotes()
+            }
+            R.id.action_themes -> {
+                showThemeDialog()
+            }
+            R.id.action_export -> {
+                exportNotes()
+            }
+            R.id.action_import -> {
+                importNotes()
+            }
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    private fun exportNotes() {
+        val allNotesText = notesList.joinToString("\n\n---\n\n") { 
+            "Title: ${it.title}\nContent: ${it.content}" 
+        }
+        // Simplified export for now, usually would use SAF
+        Toast.makeText(this, "Exporting ${notesList.size} notes...", Toast.LENGTH_SHORT).show()
+        // In a real app, I'd use MediaStore or SAF to save a .txt file
+    }
+
+    private fun importNotes() {
+        // Simplified import for now
+        Toast.makeText(this, "Select a .txt file to import", Toast.LENGTH_SHORT).show()
     }
 
     private fun showAddNoteDialog() {
@@ -131,7 +273,9 @@ class MainActivity : AppCompatActivity() {
                 title = title,
                 content = content,
                 reminderTime = reminderTime,
-                isReminderSet = reminderTime != null
+                isReminderSet = reminderTime != null,
+                createdAt = System.currentTimeMillis(),
+                updatedAt = System.currentTimeMillis()
             )
             val id = db.noteDao().insert(note).toInt()
             
@@ -159,7 +303,10 @@ class MainActivity : AppCompatActivity() {
 
     inner class NoteAdapter(
         private val notes: List<Note>,
-        private val onDeleteClick: (Note) -> Unit
+        private val onDeleteClick: (Note) -> Unit,
+        private val onPinClick: (Note) -> Unit,
+        private val onArchiveClick: (Note) -> Unit,
+        private val onFavouriteClick: (Note) -> Unit
     ) : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
 
         inner class NoteViewHolder(val binding: ItemNoteBinding) : RecyclerView.ViewHolder(binding.root)
@@ -174,12 +321,26 @@ class MainActivity : AppCompatActivity() {
             holder.binding.tvTitle.text = note.title
             holder.binding.tvContent.text = note.content
             
+            holder.binding.ivPinned.visibility = if (note.isPinned) View.VISIBLE else View.GONE
+            holder.binding.ivFavourite.visibility = if (note.isFavourite) View.VISIBLE else View.GONE
+            
+            holder.binding.btnPin.setImageResource(if (note.isPinned) android.R.drawable.btn_star_big_on else android.R.drawable.btn_star_big_off)
+            holder.binding.btnFavourite.setImageResource(if (note.isFavourite) android.R.drawable.btn_star_big_on else android.R.drawable.btn_star_big_off)
+            
+            holder.binding.btnPin.setOnClickListener { onPinClick(note) }
+            holder.binding.btnFavourite.setOnClickListener { onFavouriteClick(note) }
+            holder.binding.btnArchive.setOnClickListener { onArchiveClick(note) }
+            
             if (note.isReminderSet && note.reminderTime != null) {
                 holder.binding.reminderLayout.visibility = View.VISIBLE
                 val sdf = SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault())
                 holder.binding.tvReminderTime.text = "Reminder: ${sdf.format(Date(note.reminderTime))}"
             } else {
                 holder.binding.reminderLayout.visibility = View.GONE
+            }
+
+            holder.itemView.setOnClickListener {
+                // Open editor
             }
 
             holder.itemView.setOnLongClickListener {

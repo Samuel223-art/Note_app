@@ -1,1 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-theme-bg: var(--bg-color);
+  --color-theme-text: var(--text-color);
+  --color-theme-accent: var(--accent-color);
+  --color-theme-secondary: var(--secondary-color);
+  --color-theme-border: var(--border-color);
+  --color-theme-card: var(--card-color);
+  --color-theme-accent-text: var(--accent-text-color);
+}
+
+@layer base {
+  body {
+    @apply font-sans bg-theme-bg text-theme-text transition-colors duration-300;
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Prevent text selection on UI elements except the editor */
+  *:not(input):not(textarea):not([contenteditable]):not([contenteditable] *) {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  [contenteditable]:empty:before {
+    content: attr(placeholder);
+    color: var(--text-color);
+    opacity: 0.3;
+    pointer-events: none;
+    display: block;
+  }
+}

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_search"
+        android:icon="@android:drawable/ic_menu_search"
+        android:title="Search"
+        app:actionViewClass="androidx.appcompat.widget.SearchView"
+        app:showAsAction="always|collapseActionView" />
+    <item
+        android:id="@+id/action_view_active"
+        android:title="Home"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_view_favourites"
+        android:title="Favourites"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_view_archived"
+        android:title="Archive"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_view_trash"
+        android:title="Trash"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_themes"
+        android:title="Themes"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_export"
+        android:title="Export All (.txt)"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_import"
+        android:title="Import (.txt)"
+        app:showAsAction="never" />
+</menu>

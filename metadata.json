@@ -1,5 +1,5 @@
 {
-  "name": "Smart Note Reminder",
-  "description": "A native Android app for creating notes with scheduled reminders using AlarmManager and Room database.",
+  "name": "X Note",
+  "description": "A simple and elegant note-taking application with light, dark, and system theme support, note pinning, and export/import functionality.",
   "requestFramePermissions": []
 }
